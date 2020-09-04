@@ -7,7 +7,7 @@
 
 source(here::here("src/aux/packages.R"))
 source(here("src/aux/functions.R"))
-load(here("products/rdata/2_join.RData"))
+load(here("products/rdata/2_join_training.RData"))
 
 # generate training frame
 training <- 
