@@ -1,13 +1,8 @@
 ##########################################################################
-# File: 2_join_training.R
 # Description: Join training data to outcome data (complaints,
 #              use of force) using first name, last name, and middle
 #              initial.
 ##########################################################################
-
-source(here::here("src/aux/packages.R"))
-source(here("src/aux/functions.R"))
-load(here("products/rdata/1_import.RData"))
 
 # match training and officer data
 training_match <-
@@ -86,9 +81,8 @@ complete_match <-
 # loss due to matching
 n_training <- length(unique(training$scrambled_id))
 n_complete <- nrow(complete_match)
-n_no_match <- nrow(training %>%
-                     left_join(officers,
-                               by = c("last_name", "first_name")) %>%
+n_no_match <- nrow(left_join(training, officers,
+                             by = c("last_name", "first_name")) %>%
                      filter(is.na(appointed)))
 n_dropped  <- n_training - n_complete
 p_dropped  <- round(n_dropped / n_training * 100, 2)
@@ -107,15 +101,12 @@ Reason for dropping {n_dropped} officers:
 * {n_no_match} ({p_no_match}%)
 did not have a name match in the roster data;
 * {n_dropped - n_no_match} ({p_exact}%)
-could not be matched to exactly officer in the roster data."
+could not be matched to exactly one officer in the roster data."
 )
 
-# save
+# reduce
 training <-
-  complete_match %>%
-  transmute(assigned, uid, appointed, resigned, birth_year)
+  transmute(complete_match,
+            assigned, uid, appointed, resigned, birth_year)
 
-rm(list = setdiff(ls(), c("officers", "training", "complaints", "force",
-                          "settlement_terminus")))
-save.image(here("products/rdata/2_join_training.RData"))
 

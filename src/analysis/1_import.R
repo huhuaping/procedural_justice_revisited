@@ -1,36 +1,29 @@
 ##########################################################################
-# File: 1_import.R
 # Description: Import officer, complaints, settlements, use of force,
 #              and training data
 ##########################################################################
 
-source(here::here("src/aux/packages.R"))
-source(here("src/aux/functions.R"))
-
 # read and tidy officer data
 officers <-
-  here("data/officers/officers.csv") %>%
-  read_csv() %>%
+  read_csv("data/officers/officers.csv") %>%
   transmute(
     uid = UID, last_name = remove_suffix(last_name),
     first_name, mi = middle_initial, appointed = appointed_date,
     resigned = resignation_date, birth_year
   ) %>%
   filter(!is.na(appointed)) %>%
-  group_by(uid, last_name, first_name, birth_year, appointed, resigned) %>%
-  slice(1) %>%
-  ungroup()
+  distinct(
+    uid, last_name, first_name, birth_year, appointed, resigned,
+    .keep_all = TRUE
+  )
 
-# read complaints data [REVISED]
-source(here("src/update_data/complaints.R"))
-
-# read use of force data [REVISED]
-source(here("src/update_data/force.R"))
+# import outcome data
+source("src/analysis/_complaints.R")
+source("src/analysis/_force.R")
 
 # read training data and filter to first training assignment for each officer
 training <-
-  here("data/training/training.csv") %>%
-  read_csv() %>%
+  read_csv("data/training/training.csv") %>%
   group_by(scrambled_id, last_name, first_name) %>%
   filter(assigned == min(assigned)) %>%
   ungroup()
@@ -79,10 +72,4 @@ force <-
 settlement_terminus <-
   max(complaints$date[!is.na(complaints$settlement)], na.rm = TRUE) %>%
   floor_date("month") %m-% days(1)
-
-# remove unncessary objects and save:
-rm(list = setdiff(ls(), c("officers", "training", "complaints", "force",
-                          "settlement_terminus")))
-save.image(here("products/rdata/1_import.RData"))
-
 
