@@ -8,7 +8,6 @@
 # Session Data files
 *.RData
 *.RDataTmp
-*.Rproj
 
 # Example code in package build process
 *-Ex.R
